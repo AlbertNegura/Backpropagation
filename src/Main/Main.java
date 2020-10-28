@@ -1,5 +1,4 @@
-package Ass1;
-import AlbertUtils.*;
+package Main;
 import NeuralNetwork.*;
 
 import java.util.List;
