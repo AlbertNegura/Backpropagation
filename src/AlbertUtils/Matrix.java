@@ -63,6 +63,16 @@ public class Matrix {
                 data[i][j] = m[i][j];
     }
 
+    public void fillRandom(){
+        /**
+         * Fills the matrix with random numbers ranging between [0-1].
+         */
+        for(int i = 0; i < rows; i++){
+            for(int j = 0; j < cols; j++)
+                this.data[i][j] = Math.random();
+        }
+    }
+
 
     public void add(int scalar){
         /**
@@ -277,7 +287,7 @@ public class Matrix {
 
     public void sigmoid() {
         /**
-         * Apply the signmoid function to the elements of the Matrix.
+         * Apply the sigmoid function to the elements of the Matrix.
          */
         for(int i = 0; i < rows; i++) {
             for(int j = 0; j < cols; j++)
@@ -288,7 +298,7 @@ public class Matrix {
 
     public Matrix dsigmoid() {
         /**
-         * Apply the derivative signmoid function to the elements of the Matrix.
+         * Apply the derivative sigmoid function to the elements of the Matrix.
          * @return a new Matrix object after applying the derivative sigmoid function.
          */
         Matrix temp=new Matrix(rows,cols);
