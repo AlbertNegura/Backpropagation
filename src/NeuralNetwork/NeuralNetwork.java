@@ -159,9 +159,11 @@ public class NeuralNetwork {
         // Cost Function
         // CEF: error margin - shouldn't we square that? And then summed up to a single error value?
         Matrix error = Matrix.subtract(target, output);
-        System.out.println();
+        Double errorSum = 0d;
+        for(Double num : error.toArray())
+            errorSum += num;
+        System.out.println("Error: " + errorSum);
 
-        // Squared error - how would you solve this error? I'm not that acquainted with static etc features
         //Matrix squaredError = Matrix.product(error, error);
 
         Matrix gradient = output.dsigmoid();
