@@ -276,7 +276,7 @@ public class Matrix {
         }
     }
 
-    public Matrix elementMultiply(Matrix a, Matrix b) throws Exception {
+    public static Matrix elementMultiply(Matrix a, Matrix b) throws Exception {
         /**
          * Element-wise multiplication between the given matrix and this matrix.
          * @param a the given Matrix object.

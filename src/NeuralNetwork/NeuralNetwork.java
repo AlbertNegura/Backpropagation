@@ -11,15 +11,15 @@ import com.github.sh0nk.matplotlib4j.*;
  * The various layers are represented by Layer objects.
  * @author Viktor Cef Inselberg (i6157970), Albert Negura (i6145864)
  * @date 28/10/2020
- * @version 1.5
+ * @version 1.6
  */
 public class NeuralNetwork {
     Layer input, output, hidden;
     List<Layer> hidden_layers;
     public Matrix weights_ih , weights_ho , bias_h , bias_o;
     final boolean DEBUG = false;
-    public Double l_rate=0.9;
-    public Double decay = 0.0002;
+    public Double l_rate=1.0;
+    public Double decay = 0.002;
 
     public NeuralNetwork(int i, int o) {
         /**
@@ -117,48 +117,42 @@ public class NeuralNetwork {
         Matrix target = Matrix.fromArray(Y);
 
         Matrix error = Matrix.subtract(target, output);
-        error.elementMultiply(error);
-        error.multiply(0.5d);
         Matrix gradient = output.dsigmoid();
         gradient.elementMultiply(error);
-        gradient.multiply(l_rate);
 
-        error_list.add(error.sum());
-
-        if(DEBUG)
-            System.out.println("Gradient: " + Arrays.deepToString(gradient.data));
+        Matrix outer_error = Matrix.elementMultiply(error,error);
+        if(error_list.size() < 100000)  //more causes plotting issues
+            error_list.add(outer_error.sum());
 
         Matrix weights_ho_delta =  Matrix.multiply(gradient, Matrix.transpose(hidden));
-        if(DEBUG)
-            System.out.println("Weights hidden/output delta: " + Arrays.deepToString(weights_ho_delta.data));
+        weights_ho_delta.multiply(l_rate);
 
-        Double weights_sum = Arrays.stream(weights_ho.data).mapToDouble(arr -> arr[0]).sum() + Arrays.stream(weights_ih.data).mapToDouble(arr -> arr[0]).sum();;
-        if(DEBUG)
-            System.out.println("Weights sum: " + weights_sum);
+        Double weights_sum = Arrays.stream(weights_ho.data).mapToDouble(arr -> arr[0]).sum() + Arrays.stream(weights_ih.data).mapToDouble(arr -> arr[0]).sum();
 
         weights_ho.add(weights_ho_delta);
         weights_ho.subtract((weights_sum*decay));
         bias_o.add(gradient);
 
-        Matrix hidden_errors = Matrix.multiply(Matrix.transpose(weights_ho), error);
-        if(DEBUG)
-            System.out.println("Hidden layer errors: " + Arrays.deepToString(hidden_errors.data));
+        Matrix hidden_errors = Matrix.multiply(Matrix.transpose(weights_ho), gradient);
 
         Matrix hidden_gradient = hidden.dsigmoid();
         hidden_gradient.elementMultiply(hidden_errors);
-        hidden_gradient.multiply(l_rate);
-        if(DEBUG)
-            System.out.println("Hidden layer gradient: " + Arrays.deepToString(hidden_gradient.data));
 
         Matrix weights_ih_delta = Matrix.multiply(hidden_gradient, Matrix.transpose(input));
-        if(DEBUG)
-            System.out.println("Weights hidden/output delta: " + Arrays.deepToString(weights_ih_delta.data));
+        weights_ih_delta.multiply(l_rate);
 
         weights_ih.add(weights_ih_delta);
         weights_ih.subtract((weights_sum*decay));
         bias_h.add(hidden_gradient);
 
-        if(DEBUG) {
+
+        if(DEBUG){
+            System.out.println("Gradient: " + Arrays.deepToString(gradient.data));
+            System.out.println("Weights hidden/output delta: " + Arrays.deepToString(weights_ho_delta.data));
+            System.out.println("Weights sum: " + weights_sum);
+            System.out.println("Hidden layer errors: " + Arrays.deepToString(hidden_errors.data));
+            System.out.println("Hidden layer gradient: " + Arrays.deepToString(hidden_gradient.data));
+            System.out.println("Weights hidden/output delta: " + Arrays.deepToString(weights_ih_delta.data));
             System.out.println("New weights first layer: " + weights_ih.toArray());
             System.out.println("New weights second layer: " + weights_ho.toArray());
             System.out.println("------------\n");
