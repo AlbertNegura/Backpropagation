@@ -1,5 +1,6 @@
 package Main;
 import NeuralNetwork.*;
+import com.github.sh0nk.matplotlib4j.Plot;
 
 import java.util.List;
 
@@ -35,9 +36,22 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         NeuralNetwork nn = new NeuralNetwork(8,3,8);
-        for(int i = 0; i < 5; i++)
-            for(Double[] row : X)
-                nn.fit(X, Y, 1000);
+
+        Plot plt = Plot.create();
+        plt.plot().add(nn.weights_ih.toArray()).label("weights_ho").linestyle("--");
+        plt.plot().add(nn.weights_ho.toArray()).label("weights_ho").linestyle("-");
+
+        nn.fit(X, Y, 50000);
+
+        plt.plot().add(nn.weights_ih.toArray()).label("weights_ho").linestyle("--");
+        plt.plot().add(nn.weights_ho.toArray()).label("weights_ho").linestyle("-");
+        plt.show();
+
+
+        plt = Plot.create();
+        plt.plot().add(nn.error_list).label("error").linestyle("-");
+        plt.show();
+
 
         List<Double> output;
 

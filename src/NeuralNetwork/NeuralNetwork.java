@@ -3,6 +3,7 @@ package NeuralNetwork;
 import AlbertUtils.Matrix;
 
 import java.util.*;
+import com.github.sh0nk.matplotlib4j.*;
 
 /**
  * This is an initial implementation for a simple Neural Network class.
@@ -15,7 +16,7 @@ import java.util.*;
 public class NeuralNetwork {
     Layer input, output, hidden;
     List<Layer> hidden_layers;
-    Matrix weights_ih , weights_ho , bias_h , bias_o;
+    public Matrix weights_ih , weights_ho , bias_h , bias_o;
     final boolean DEBUG = false;
     public Double l_rate=0.9;
     public Double decay = 0.0002;
@@ -106,6 +107,7 @@ public class NeuralNetwork {
 
     }
 
+    public ArrayList<Double> error_list = new ArrayList<Double>();
     private void backpropagation(Matrix input, Matrix hidden, Matrix output, Double[] Y) throws Exception {
         if(DEBUG) {
             System.out.println("--------------\n");
@@ -115,9 +117,13 @@ public class NeuralNetwork {
         Matrix target = Matrix.fromArray(Y);
 
         Matrix error = Matrix.subtract(target, output);
+        error.elementMultiply(error);
+        error.multiply(0.5d);
         Matrix gradient = output.dsigmoid();
-        gradient.multiply(error);
+        gradient.elementMultiply(error);
         gradient.multiply(l_rate);
+
+        error_list.add(error.sum());
 
         if(DEBUG)
             System.out.println("Gradient: " + Arrays.deepToString(gradient.data));
@@ -131,7 +137,7 @@ public class NeuralNetwork {
             System.out.println("Weights sum: " + weights_sum);
 
         weights_ho.add(weights_ho_delta);
-        //weights_ho.subtract((weights_sum*decay));
+        weights_ho.subtract((weights_sum*decay));
         bias_o.add(gradient);
 
         Matrix hidden_errors = Matrix.multiply(Matrix.transpose(weights_ho), error);
@@ -139,7 +145,7 @@ public class NeuralNetwork {
             System.out.println("Hidden layer errors: " + Arrays.deepToString(hidden_errors.data));
 
         Matrix hidden_gradient = hidden.dsigmoid();
-        hidden_gradient.multiply(hidden_errors);
+        hidden_gradient.elementMultiply(hidden_errors);
         hidden_gradient.multiply(l_rate);
         if(DEBUG)
             System.out.println("Hidden layer gradient: " + Arrays.deepToString(hidden_gradient.data));
@@ -149,7 +155,7 @@ public class NeuralNetwork {
             System.out.println("Weights hidden/output delta: " + Arrays.deepToString(weights_ih_delta.data));
 
         weights_ih.add(weights_ih_delta);
-        //weights_ih.subtract((weights_sum*decay));
+        weights_ih.subtract((weights_sum*decay));
         bias_h.add(hidden_gradient);
 
         if(DEBUG) {
@@ -163,7 +169,7 @@ public class NeuralNetwork {
     public void fit(Double[][]X, Double[][]Y, int epochs) throws Exception {
         for(int i=0;i<epochs;i++)
         {
-            int sampleN =  (int)(Math.random() * X.length );
+            int sampleN =  (int)(Math.random() * X.length);
             this.train(X[sampleN], Y[sampleN]);
         }
     }

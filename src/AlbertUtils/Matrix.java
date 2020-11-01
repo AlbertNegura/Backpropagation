@@ -124,6 +124,17 @@ public class Matrix {
         }
     }
 
+    public Double sum(){
+        Double sum = 0d;
+
+        for(int i = 0; i < data.length; i++){
+            for(int j = 0; j < data[0].length; j++)
+                sum += data[i][j];
+        }
+
+        return sum;
+    }
+
     public void subtract(int scalar){
         /**
          * Inverse addition operation.
@@ -252,7 +263,7 @@ public class Matrix {
         }
     }
 
-    public Matrix product(Matrix a, Matrix b) throws Exception {
+    public Matrix elementMultiply(Matrix a, Matrix b) throws Exception {
         /**
          * Element-wise multiplication between the given matrix and this matrix.
          * @param a the given Matrix object.
@@ -268,12 +279,12 @@ public class Matrix {
         return temp;
     }
 
-    public void product(Matrix a) throws Exception {
+    public void elementMultiply(Matrix a) throws Exception {
         /**
          * Element-wise multiplication between the given matrix and this matrix.
          * @param a the given Matrix object.
          */
-        if (this.cols != a.rows){
+        if (a.cols != this.cols && a.rows != this.rows){
             throw new Exception("Shape mismatch exception");
         }
         for(int i = 0; i < this.rows; i++){

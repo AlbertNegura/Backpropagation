@@ -7,14 +7,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/matplotlib4j-master/gradle/wrapper/gradle-wrapper.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" exported="" name="com.github.sh0nk:matplotlib4j:0.4.0" level="project" />
+    <orderEntry type="library" name="lib" level="project" />
   </component>
 </module>
