@@ -11,7 +11,7 @@ import com.github.sh0nk.matplotlib4j.*;
  * The various layers are represented by Layer objects.
  * @author Viktor Cef Inselberg (i6157970), Albert Negura (i6145864)
  * @date 28/10/2020
- * @version 1.0
+ * @version 1.5
  */
 public class NeuralNetwork {
     Layer input, output, hidden;

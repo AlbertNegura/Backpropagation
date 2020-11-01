@@ -9,7 +9,7 @@ import java.util.Random;
         * This is a custom Matrix class with self-implemented functions, designed for my own general use.
         * @author Viktor Cef Inselberg (i6157970), Albert Negura (i6145864)
         * @date 26/10/2020
-        * @version 1.5
+        * @version 1.8
         */
 public class Matrix {
     public Double[][] data;

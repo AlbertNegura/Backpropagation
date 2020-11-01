@@ -10,7 +10,7 @@ import java.util.List;
  * The remaining classes in this package were designed to be reusable in the future.
  * @author Viktor Cef Inselberg (i6157970), Albert Negura (i6145864)
  * @date 26/10/2020
- * @version 0.1
+ * @version 1.0
  */
 public class Main {
     static Double[][] X= {
