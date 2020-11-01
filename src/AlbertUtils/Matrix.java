@@ -9,7 +9,7 @@ import java.util.Random;
         * This is a custom Matrix class with self-implemented functions, designed for my own general use.
         * @author Viktor Cef Inselberg (i6157970), Albert Negura (i6145864)
         * @date 26/10/2020
-        * @version 1.8
+        * @version 1.9
         */
 public class Matrix {
     public Double[][] data;
@@ -63,6 +63,19 @@ public class Matrix {
         for(int i = 0; i < rows; i++)
             for(int j = 0; j < cols; j++)
                 data[i][j] = m[i][j];
+    }
+
+    public Matrix(Matrix m){
+        /**
+         * Initializes a matrix object that is exactly the same as the given Double[][] array.
+         * @param m the 2d Double array to instantiate a matrix object out of.
+         */
+        this.rows = m.rows;
+        this.cols = m.cols;
+        this.data = new Double[rows][cols];
+        for(int i = 0; i < rows; i++)
+            for(int j = 0; j < cols; j++)
+                data[i][j] = m.data[i][j];
     }
 
 

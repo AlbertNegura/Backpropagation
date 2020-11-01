@@ -107,7 +107,7 @@ public class NeuralNetwork {
 
     }
 
-    public ArrayList<Double> error_list = new ArrayList<Double>();
+    public ArrayList<Double> error_list = new ArrayList<>();
     private void backpropagation(Matrix input, Matrix hidden, Matrix output, Double[] Y) throws Exception {
         if(DEBUG) {
             System.out.println("--------------\n");
