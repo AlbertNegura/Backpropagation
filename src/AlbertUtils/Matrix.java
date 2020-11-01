@@ -1,11 +1,13 @@
 package AlbertUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 /**
         * This is a custom Matrix class with self-implemented functions, designed for my own general use.
-        * @author Albert Negura (i6145864)
+        * @author Viktor Cef Inselberg (i6157970), Albert Negura (i6145864)
         * @date 26/10/2020
         * @version 1.5
         */
@@ -23,7 +25,7 @@ public class Matrix {
         this.cols = size;
         for(int i = 0; i < size; i++)
             for(int j = 0; j < size; j++)
-                data[i][j] = 0d;
+                data[i][j] = Math.random()/100;
     }
 
     public Matrix(){
@@ -32,7 +34,7 @@ public class Matrix {
          */
         this.rows = 1;
         this.cols = 1;
-        this.data = new Double[][]{{0d}};
+        this.data = new Double[][]{{Math.random()/100}};
     }
 
     public Matrix(int rows, int cols){
@@ -46,7 +48,7 @@ public class Matrix {
         this.cols = cols;
         for(int i = 0; i < rows; i++)
             for(int j = 0; j < cols; j++)
-                data[i][j] = 0d;
+                data[i][j] = Math.random()/100;
     }
 
 
@@ -65,6 +67,17 @@ public class Matrix {
 
 
     public void add(int scalar){
+        /**
+         * Basic addition function for adding a scalar quantity to every value in the Matrix.
+         * @param scalar scalar value which to add to every value in the Matrix.
+         */
+        for(int i = 0; i < rows; i++){
+            for(int j = 0; j < cols; j++)
+                this.data[i][j]+=scalar;
+        }
+    }
+
+    public void add(Double scalar){
         /**
          * Basic addition function for adding a scalar quantity to every value in the Matrix.
          * @param scalar scalar value which to add to every value in the Matrix.
@@ -115,6 +128,15 @@ public class Matrix {
         /**
          * Inverse addition operation.
          * @see Matrix.add(int scalar)
+         * @param scalar scalar value to be subtracted from every element of this Matrix object.
+         */
+        add(-1*scalar);
+    }
+
+    public void subtract(Double scalar){
+        /**
+         * Inverse addition operation.
+         * @see Matrix.add(Double scalar)
          * @param scalar scalar value to be subtracted from every element of this Matrix object.
          */
         add(-1*scalar);
@@ -308,6 +330,24 @@ public class Matrix {
                 this.data[i][j] = Math.sin(-this.data[i][j]);
         }
     }
+
+    public void softmax(){
+        /**
+         * Apply the softmax function to the elements of the Matrix.
+         */
+        Double sum = 0d;
+
+        for(int i = 0; i < rows; i++) {
+            for(int j = 0; j < cols; j++)
+                sum+= Math.exp(data[i][j]);
+        }
+
+        for(int i = 0; i < rows; i++) {
+            for(int j = 0; j < cols; j++)
+                this.data[i][j] = Math.exp(this.data[i][j]) / sum;
+        }
+    }
+
 
     public void relu(Double summedInput){
         /**
