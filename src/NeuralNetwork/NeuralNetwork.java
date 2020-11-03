@@ -18,8 +18,8 @@ public class NeuralNetwork {
     List<Layer> hidden_layers;
     public Matrix weights_ih , weights_ho , bias_h , bias_o;
     final boolean DEBUG = false;
-    public Double l_rate=1.0;
-    public Double decay = 0.002;
+    public Double l_rate=5d;
+    public Double decay = 0.001;
 
     public NeuralNetwork(int i, int o) {
         /**
@@ -89,6 +89,11 @@ public class NeuralNetwork {
     }
 
     public void train(Double[] X, Double[] Y) throws Exception {
+        /**
+         * Train the neural network given a particular input / output.
+         * @param X The input of the current iteration.
+         * @param Y The matching output.
+         */
         if(DEBUG) {
             System.out.println("--------------\n");
             System.out.println("Weights first layer: " + weights_ih.toArray());
@@ -103,12 +108,127 @@ public class NeuralNetwork {
         output.add(bias_o);
         output.sigmoid();
 
-        backpropagation(input, hidden, output, Y);
+        backpropagation(input, hidden, output, Y, true);
 
     }
 
-    public ArrayList<Double> error_list = new ArrayList<>();
+    Matrix delta_weights_ho, delta_weights_ih;
+    Matrix delta_bias_o, delta_bias_h;
+    public void train(ArrayList<Double[]> X, ArrayList<Double[]> Y) throws Exception {
+        /**
+         * Train the neural network given a particular batch of input / output combinations.
+         * @param X The ordered list of inputs of the current iteration.
+         * @param Y The matching ordered list of outputs.
+         */
+        if(DEBUG) {
+            System.out.println("--------------\n");
+            System.out.println("Weights first layer: " + weights_ih.toArray());
+            System.out.println("Weights second layer: " + weights_ho.toArray());
+        }
+        delta_weights_ho = new Matrix(weights_ho.rows,weights_ho.cols);
+        delta_weights_ih = new Matrix(weights_ih.rows,weights_ih.cols);
+        Matrix average_error = new Matrix(Matrix.fromArray(Y.get(0)).rows, Matrix.fromArray(Y.get(0)).cols);
+        for(int i = 0; i < X.size(); i++) {
+            Double[] x = X.get(i);
+            Matrix input = Matrix.fromArray(x);
+            Matrix hidden = Matrix.multiply(weights_ih, input);
+            hidden.add(bias_h);
+            hidden.sigmoid();
+
+            Matrix output = Matrix.multiply(weights_ho, hidden);
+            output.add(bias_o);
+            output.sigmoid();
+            Matrix error = Matrix.subtract(Matrix.fromArray(Y.get(i)), output);
+            average_error.add(error);
+            backpropagation(input, hidden, output, Y.get(i));
+        }
+
+        Double value = average_error.sum();
+        value /= Y.size();
+        value *= value;
+        if(error_list.size() < 100000)  //more causes plotting issues
+            error_list.add(value);
+
+        delta_weights_ho.multiply(1d/(double)X.size());
+        delta_weights_ih.multiply(1d/(double)X.size());
+        Matrix temp_ho = new Matrix(weights_ho);
+        Matrix temp_ih = new Matrix(weights_ih);
+        temp_ho.multiply(decay);
+        temp_ih.multiply(decay);
+        temp_ho.add(delta_weights_ho);
+        temp_ih.add(delta_weights_ih);
+        temp_ho.multiply(-l_rate);
+        temp_ih.multiply(-l_rate);
+        weights_ho.add(temp_ho);
+        weights_ih.add(temp_ih);
+
+        delta_bias_o = new Matrix(bias_o);
+        delta_bias_h = new Matrix(bias_h);
+        delta_bias_o.multiply(1d/(double)X.size());
+        delta_bias_h.multiply(1d/(double)X.size());
+        delta_bias_h.multiply(-l_rate);
+        delta_bias_o.multiply(-l_rate);
+        bias_h.add(delta_bias_h);
+        bias_o.add(delta_bias_o);
+    }
+
+    public ArrayList<Double> error_list = new ArrayList<>(); // use with matplotlib4j to generate error plot
     private void backpropagation(Matrix input, Matrix hidden, Matrix output, Double[] Y) throws Exception {
+        /**
+         * Batch-based backpropagation.
+         * @param input The input.
+         * @param hidden The activated output to the hidden layer.
+         * @param output The activated output of the hidden layer to the output layer.
+         * @param Y The target output for the given input.
+         */
+        if(DEBUG) {
+            System.out.println("--------------\n");
+            System.out.println("Weights first layer: " + weights_ih.toArray());
+            System.out.println("Weights second layer: " + weights_ho.toArray());
+        }
+        Matrix target = Matrix.fromArray(Y);
+        Matrix error = Matrix.subtract(target,output);
+        Matrix gradient = output.dsigmoid();
+        gradient.elementMultiply(error);
+        gradient.multiply(-1d);
+
+        Matrix hidden_errors = Matrix.multiply(Matrix.transpose(weights_ho), gradient);
+        Matrix hidden_gradient = hidden.dsigmoid();
+        hidden_gradient.elementMultiply(hidden_errors);
+
+
+        Matrix weights_ho_delta =  Matrix.multiply(gradient, Matrix.transpose(hidden));
+        bias_o.add(gradient);
+
+        Matrix weights_ih_delta = Matrix.multiply(hidden_gradient, Matrix.transpose(input));
+        bias_h.add(hidden_gradient);
+
+
+        delta_weights_ho.add(weights_ho_delta);
+        delta_weights_ih.add(weights_ih_delta);
+
+        if(DEBUG){
+            System.out.println("Gradient: " + Arrays.deepToString(gradient.data));
+            System.out.println("Weights hidden/output delta: " + Arrays.deepToString(weights_ho_delta.data));
+            //System.out.println("Weights sum: " + weights_sum);
+            System.out.println("Hidden layer errors: " + Arrays.deepToString(hidden_errors.data));
+            System.out.println("Hidden layer gradient: " + Arrays.deepToString(hidden_gradient.data));
+            System.out.println("Weights hidden/output delta: " + Arrays.deepToString(weights_ih_delta.data));
+            System.out.println("New weights first layer: " + weights_ih.toArray());
+            System.out.println("New weights second layer: " + weights_ho.toArray());
+            System.out.println("------------\n");
+        }
+
+    }
+
+    private void backpropagation(Matrix input, Matrix hidden, Matrix output, Double[] Y, boolean old) throws Exception {
+        /**
+         * Simple backpropagation.
+         * @param input The input.
+         * @param hidden The activated output to the hidden layer.
+         * @param output The activated output of the hidden layer to the output layer.
+         * @param Y The target output for the given input.
+         */
         if(DEBUG) {
             System.out.println("--------------\n");
             System.out.println("Weights first layer: " + weights_ih.toArray());
@@ -129,10 +249,6 @@ public class NeuralNetwork {
 
         Double weights_sum = Arrays.stream(weights_ho.data).mapToDouble(arr -> arr[0]).sum() + Arrays.stream(weights_ih.data).mapToDouble(arr -> arr[0]).sum();
 
-        weights_ho.add(weights_ho_delta);
-        weights_ho.subtract((weights_sum*decay));
-        bias_o.add(gradient);
-
         Matrix hidden_errors = Matrix.multiply(Matrix.transpose(weights_ho), gradient);
 
         Matrix hidden_gradient = hidden.dsigmoid();
@@ -140,6 +256,10 @@ public class NeuralNetwork {
 
         Matrix weights_ih_delta = Matrix.multiply(hidden_gradient, Matrix.transpose(input));
         weights_ih_delta.multiply(l_rate);
+
+        weights_ho.add(weights_ho_delta);
+        weights_ho.subtract((weights_sum*decay));
+        bias_o.add(gradient);
 
         weights_ih.add(weights_ih_delta);
         weights_ih.subtract((weights_sum*decay));
@@ -161,10 +281,38 @@ public class NeuralNetwork {
     }
 
     public void fit(Double[][]X, Double[][]Y, int epochs) throws Exception {
+        /**
+         * Gradient Descent with backpropagation.
+         * @param X Inputs as a 2d Double object array.
+         * @param Y Corresponding outputs as a 2d Double object array
+         * @param epochs The number of epochs to train the neural network.
+         */
         for(int i=0;i<epochs;i++)
         {
+            //use a random input/output combination as training data.
             int sampleN =  (int)(Math.random() * X.length);
             this.train(X[sampleN], Y[sampleN]);
+        }
+    }
+
+    public void fit(Double[][]X, Double[][]Y, int epochs, int batch_size) throws Exception {
+        /**
+         * Batch gradient descent, currently not working properly.
+         * @param X Inputs as a 2d Double object array.
+         * @param Y Corresponding outputs as a 2d Double object array
+         * @param epochs The number of epochs to train the neural network.
+         * @param batch_size The desired batch size for the neural network inputs.
+         */
+        for(int i=0;i<epochs;i++)
+        {
+            ArrayList<Double[]> batch_xs = new ArrayList<>(), batch_ys = new ArrayList<>();
+            for(int j = 0; j < batch_size; j++) {
+                for(int k = 0; k < X.length; k++) {
+                    batch_xs.add(X[k]);
+                    batch_ys.add(Y[k]);
+                }
+            }
+            train(batch_xs, batch_ys);
         }
     }
 }

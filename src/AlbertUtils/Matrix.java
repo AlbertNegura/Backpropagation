@@ -48,7 +48,7 @@ public class Matrix {
         this.cols = cols;
         for(int i = 0; i < rows; i++)
             for(int j = 0; j < cols; j++)
-                data[i][j] = Math.random()/100;
+                data[i][j] = Math.random()/10;
     }
 
 
@@ -76,6 +76,20 @@ public class Matrix {
         for(int i = 0; i < rows; i++)
             for(int j = 0; j < cols; j++)
                 data[i][j] = m.data[i][j];
+    }
+
+    public static Matrix average(ArrayList<Matrix> input) throws Exception {
+        /**
+         * Calculates the average Matrix of the given ArrayList of Matrix objects.
+         * @param input the ArrayList of Matrix objects to be averaged.
+         * @return the averaged Matrix
+         */
+        Matrix temp = new Matrix(input.get(0).rows,input.get(0).cols);
+        for(Matrix gradient: input){
+            temp.add(gradient);
+        }
+        temp.multiply(1d/(double) input.size());
+        return temp;
     }
 
 

@@ -1,5 +1,8 @@
 package Main;
 import NeuralNetwork.*;
+// Note that the following import allows the use of matplotlib syntax from python within java.
+// It is not necessary and is merely a helper library.
+// There are full instructions on how to add it to the project using gradle or maven on their github: https://github.com/sh0nk/matplotlib4j
 import com.github.sh0nk.matplotlib4j.Plot;
 
 import java.util.List;
@@ -41,7 +44,7 @@ public class Main {
         plt.plot().add(nn.weights_ih.toArray()).label("weights_ho").linestyle("--");
         plt.plot().add(nn.weights_ho.toArray()).label("weights_ho").linestyle("-");
 
-        nn.fit(X, Y, 50000);
+        nn.fit(X, Y, 10000);
 
         plt.plot().add(nn.weights_ih.toArray()).label("weights_ho").linestyle("--");
         plt.plot().add(nn.weights_ho.toArray()).label("weights_ho").linestyle("-");
