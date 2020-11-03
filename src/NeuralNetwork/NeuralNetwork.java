@@ -11,14 +11,14 @@ import com.github.sh0nk.matplotlib4j.*;
  * The various layers are represented by Layer objects.
  * @author Viktor Cef Inselberg (i6157970), Albert Negura (i6145864)
  * @date 28/10/2020
- * @version 1.6
+ * @version 2.0
  */
 public class NeuralNetwork {
     Layer input, output, hidden;
     List<Layer> hidden_layers;
     public Matrix weights_ih , weights_ho , bias_h , bias_o;
     final boolean DEBUG = false;
-    public Double l_rate=5d;
+    public Double l_rate=2d;
     public Double decay = 0.001;
 
     public NeuralNetwork(int i, int o) {
@@ -173,6 +173,7 @@ public class NeuralNetwork {
     }
 
     public ArrayList<Double> error_list = new ArrayList<>(); // use with matplotlib4j to generate error plot
+    public ArrayList<Double> temp_error_list = new ArrayList<>(); // use with matplotlib4j to generate error plot
     private void backpropagation(Matrix input, Matrix hidden, Matrix output, Double[] Y) throws Exception {
         /**
          * Batch-based backpropagation.
@@ -221,6 +222,8 @@ public class NeuralNetwork {
 
     }
 
+    public int j=0;
+    public boolean draw = false;
     private void backpropagation(Matrix input, Matrix hidden, Matrix output, Double[] Y, boolean old) throws Exception {
         /**
          * Simple backpropagation.
@@ -229,7 +232,7 @@ public class NeuralNetwork {
          * @param output The activated output of the hidden layer to the output layer.
          * @param Y The target output for the given input.
          */
-        if(DEBUG) {
+        if (DEBUG) {
             System.out.println("--------------\n");
             System.out.println("Weights first layer: " + weights_ih.toArray());
             System.out.println("Weights second layer: " + weights_ho.toArray());
@@ -240,10 +243,16 @@ public class NeuralNetwork {
         Matrix gradient = output.dsigmoid();
         gradient.elementMultiply(error);
 
-        Matrix outer_error = Matrix.elementMultiply(error,error);
-        if(error_list.size() < 100000)  //more causes plotting issues
-            error_list.add(outer_error.sum());
-
+        Matrix outer_error = Matrix.elementMultiply(error, error);
+        if (draw && j % 100 == 0 && error_list.size() < 100000){ //this is by far the slowest part of the code - execution time increased 30th fold after adding this
+            temp_error_list.add(outer_error.sum());
+            Double sum = Arrays.stream(temp_error_list.toArray()).mapToDouble(arr -> (double) arr).sum();
+            error_list.add(sum/temp_error_list.size());
+        }
+        else if(draw) {
+            j++;
+            temp_error_list.add(outer_error.sum());
+        }
         Matrix weights_ho_delta =  Matrix.multiply(gradient, Matrix.transpose(hidden));
         weights_ho_delta.multiply(l_rate);
 
