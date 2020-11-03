@@ -18,7 +18,7 @@ public class Layer {
     public Matrix inputs;
     public Matrix outputs;
     public Integer thisActivation;
-    public HashMap<String,Integer> activationFunction = new HashMap<>(){
+    public HashMap<String,Integer> activationFunction = new HashMap<String, Integer>(){
         {
             put("sigmoid", 0);
             put("relu", 1);

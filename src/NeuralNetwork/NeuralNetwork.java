@@ -3,7 +3,6 @@ package NeuralNetwork;
 import AlbertUtils.Matrix;
 
 import java.util.*;
-import com.github.sh0nk.matplotlib4j.*;
 
 /**
  * This is an initial implementation for a simple Neural Network class.
@@ -17,9 +16,9 @@ public class NeuralNetwork {
     Layer input, output, hidden;
     List<Layer> hidden_layers;
     public Matrix weights_ih , weights_ho , bias_h , bias_o;
-    final boolean DEBUG = false;
-    public Double l_rate=2d;
-    public Double decay = 0.001;
+    public boolean DEBUG = false;
+    public Double l_rate=5d;
+    public Double decay = 0.00002;
 
     public NeuralNetwork(int i, int o) {
         /**
@@ -73,9 +72,10 @@ public class NeuralNetwork {
          * @return A List of Double objects corresponding to the output of the neural network.
          * @throws Exception in cases where the matrix dimensions don't match.
          */
-        System.out.println("Weights first layer: " + weights_ih.toArray());
-        System.out.println("Weights second layer: " + weights_ho.toArray());
-
+        if(DEBUG) {
+            System.out.println("Weights first layer: " + weights_ih.toArray());
+            System.out.println("Weights second layer: " + weights_ho.toArray());
+        }
         Matrix input = Matrix.fromArray(X);
         Matrix hidden = Matrix.multiply(weights_ih, input);
         hidden.add(bias_h);
@@ -224,6 +224,7 @@ public class NeuralNetwork {
 
     public int j=0;
     public boolean draw = false;
+    public boolean flag = false;
     private void backpropagation(Matrix input, Matrix hidden, Matrix output, Double[] Y, boolean old) throws Exception {
         /**
          * Simple backpropagation.
@@ -244,6 +245,11 @@ public class NeuralNetwork {
         gradient.elementMultiply(error);
 
         Matrix outer_error = Matrix.elementMultiply(error, error);
+        if(outer_error.sum() < 0.001) {
+            prev_epoch = outer_error.sum();
+            flag = true;
+        }
+
         if (draw && j % 100 == 0 && error_list.size() < 100000){ //this is by far the slowest part of the code - execution time increased 30th fold after adding this
             temp_error_list.add(outer_error.sum());
             Double sum = Arrays.stream(temp_error_list.toArray()).mapToDouble(arr -> (double) arr).sum();
@@ -253,10 +259,9 @@ public class NeuralNetwork {
             j++;
             temp_error_list.add(outer_error.sum());
         }
+
         Matrix weights_ho_delta =  Matrix.multiply(gradient, Matrix.transpose(hidden));
         weights_ho_delta.multiply(l_rate);
-
-        Double weights_sum = Arrays.stream(weights_ho.data).mapToDouble(arr -> arr[0]).sum() + Arrays.stream(weights_ih.data).mapToDouble(arr -> arr[0]).sum();
 
         Matrix hidden_errors = Matrix.multiply(Matrix.transpose(weights_ho), gradient);
 
@@ -266,19 +271,22 @@ public class NeuralNetwork {
         Matrix weights_ih_delta = Matrix.multiply(hidden_gradient, Matrix.transpose(input));
         weights_ih_delta.multiply(l_rate);
 
+        Matrix temp = new Matrix(weights_ho);
         weights_ho.add(weights_ho_delta);
-        weights_ho.subtract((weights_sum*decay));
+        temp.multiply(decay);
+        weights_ho.subtract(temp);
         bias_o.add(gradient);
 
+        temp = new Matrix(weights_ih);
         weights_ih.add(weights_ih_delta);
-        weights_ih.subtract((weights_sum*decay));
+        temp.multiply(decay);
+        weights_ih.subtract(temp);
         bias_h.add(hidden_gradient);
 
 
         if(DEBUG){
             System.out.println("Gradient: " + Arrays.deepToString(gradient.data));
             System.out.println("Weights hidden/output delta: " + Arrays.deepToString(weights_ho_delta.data));
-            System.out.println("Weights sum: " + weights_sum);
             System.out.println("Hidden layer errors: " + Arrays.deepToString(hidden_errors.data));
             System.out.println("Hidden layer gradient: " + Arrays.deepToString(hidden_gradient.data));
             System.out.println("Weights hidden/output delta: " + Arrays.deepToString(weights_ih_delta.data));
@@ -289,6 +297,8 @@ public class NeuralNetwork {
 
     }
 
+    public boolean shuffle = false;
+    public Double prev_epoch = 0d;
     public void fit(Double[][]X, Double[][]Y, int epochs) throws Exception {
         /**
          * Gradient Descent with backpropagation.
@@ -296,11 +306,22 @@ public class NeuralNetwork {
          * @param Y Corresponding outputs as a 2d Double object array
          * @param epochs The number of epochs to train the neural network.
          */
-        for(int i=0;i<epochs;i++)
-        {
-            //use a random input/output combination as training data.
-            int sampleN =  (int)(Math.random() * X.length);
-            this.train(X[sampleN], Y[sampleN]);
+        for(int i=0;i<epochs;i++) {
+
+            if (shuffle) {
+                //use a random input/output combination as training data.
+                int sampleN = (int) (Math.random() * X.length);
+                this.train(X[sampleN], Y[sampleN]);
+            } else{
+                this.train(X[i%X[0].length], Y[i%Y[0].length]);
+                shuffle = !shuffle;
+            }
+
+            if(flag) {
+                System.out.println("Converged at " + i + " epochs");
+                flag = false;
+                return;
+            }
         }
     }
 

@@ -1,23 +1,18 @@
 package Main;
 import NeuralNetwork.*;
-// Note that the following import allows the use of matplotlib syntax from python within java.
-// It is not necessary and is merely a helper library.
-// There are full instructions on how to add it to the project using gradle or maven on their github: https://github.com/sh0nk/matplotlib4j
-import com.github.sh0nk.matplotlib4j.Plot;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * This is the main class for the Neural Network package, created specifically for Assignment 1 for the Advanced Concepts in Machine Learning course (2020-2021).
  * This main class features the necessary helper methods and classes in order to fully simulate a working neural network with backpropagation.
  * The remaining classes in this package were designed to be reusable in the future.
+ * Note that unlike the Main class in the same package, this class utilizes command line arguments AND does not include an external graphing package.
  * @author Viktor Cef Inselberg (i6157970), Albert Negura (i6145864)
  * @date 26/10/2020
  * @version 1.0
  */
-public class Main {
+public class GraphlessMain {
     static Double[][] X= {
             {1d, 0d, 0d, 0d, 0d, 0d, 0d, 0d},
             {0d, 1d, 0d, 0d, 0d, 0d, 0d, 0d},
@@ -42,56 +37,73 @@ public class Main {
     private static boolean test = false;
 
     public static void main(String[] args) throws Exception {
+        // note that the following arg parsing solution was taken from
+        // https://stackoverflow.com/questions/7341683/parsing-arguments-to-a-java-command-line-program
+        // last accessed on 3/11/2020
+
+        final Map<String, List<String>> params = new HashMap<>();
+
+        List<String> options = null;
+        for(int i = 0; i < args.length; i++){
+            final String a = args[i];
+            if(a.charAt(0) == '-'){
+                if(a.length() < 2){
+                    System.err.println("Error at argument + " + a);
+                }
+
+                options = new ArrayList<>();
+                params.put(a.substring(1), options);
+            } else if(options != null)
+                options.add(a);
+            else{
+                System.err.println("Illegal parameter usage");
+                return;
+            }
+        }
+
+        int epochs = Integer.parseInt(params.get("epoch").get(0));
+
+        // remaining code is self-implemented
+
         NeuralNetwork nn = new NeuralNetwork(8,3,8);
 
         //for drawing purposes
-        nn.draw = true;
-        nn.j = 0;
+        nn.draw = false;
 
         List<Double> initial_h = nn.weights_ih.toArray();
         initial_h.addAll(nn.bias_h.toArray());
         List<Double> initial_o = nn.weights_ho.toArray();
         initial_o.addAll(nn.bias_o.toArray());
 
-        //plot initial weights
-        Plot plt = Plot.create();
-        plt.title("Initial weights and final weights"); //note that matplotlib4j doesn't allow scatter plots
-        plt.plot().add(initial_h).label("Initial input -> hidden weights").linestyle("--");
-        plt.plot().add(initial_o).label("Initial hidden -> output weights").linestyle("-");
+        nn.l_rate = Double.parseDouble(params.get("learn").get(0));
+        nn.decay = Double.parseDouble(params.get("decay").get(0));
+        nn.DEBUG = Boolean.parseBoolean(params.get("DEBUG").get(0));
 
-        nn.fit(X, Y, 50000);
+        nn.fit(X, Y, epochs);
 
         List<Double> final_h = nn.weights_ih.toArray();
         final_h.addAll(nn.bias_h.toArray());
         List<Double> final_o = nn.weights_ho.toArray();
         final_o.addAll(nn.bias_o.toArray());
 
-        plt.plot().add(final_h).label("Final input -> hidden weights").linestyle("--");
-        plt.plot().add(final_o).label("Final hidden -> output weights").linestyle("-");
-        plt.legend();
-        plt.xlabel("Weight number");
-        plt.ylabel("Weight value");
-        plt.show();
-
-
-        plt = Plot.create();
-        plt.plot().add(nn.error_list).label("").linestyle("-");
-        plt.title("Example convergence for a learning rate of " + nn.l_rate + " and decay " + nn.decay);
-        plt.xlabel("Number of epochs");
-        plt.ylabel("Error between output and prediction");
-        plt.show();
-
 
         List<Double> output;
-
-        Double [][] input ={{0d,0d,0d,0d,1d,0d,0d,0d}};
+        Double[][] input = new Double[params.get("input").size()][8];
+        for(int i = 0; i < params.get("input").size(); i++){
+            String inputString = params.get("input").get(i);
+            for(int j = 0; j < 8; j++){
+                input[i][j] = Double.parseDouble(Character.toString(inputString.charAt(j)));
+            }
+        }
         //for(Double d[]:input)
         //{
-        output = nn.predict(input[0]);
-        System.out.println(output.toString());
+        for(Double[] in: input) {
+            output = nn.predict(in);
+            System.out.println(output.toString());
+        }
         //}
         if(test)
-            testSuite(50000);
+            testSuite(epochs);
     }
 
     public static void testSuite(int epochs) throws Exception {
@@ -114,16 +126,6 @@ public class Main {
             errors.add(nn.error_list);
         }
 
-        Plot plt = Plot.create();
-        int i = 0;
-        for(ArrayList<Double> error: errors)
-            plt.plot().add(error).label(""+l_rates[i++]).linestyle("-");
-        plt.xlabel("Number of epochs");
-        plt.ylabel("Error between output and prediction");
-        plt.title("Learning rate convergence for different learning rates with shuffled data");
-        plt.legend();
-        plt.show();
-
         for (Double l_rate : l_rates) {
             NeuralNetwork nn = new NeuralNetwork(8, 3, 8);
             nn.l_rate = l_rate;
@@ -135,17 +137,6 @@ public class Main {
             errors.add(nn.error_list);
         }
 
-        plt = Plot.create();
-        i = 0;
-        for(ArrayList<Double> error: errors)
-            plt.plot().add(error).label(""+l_rates[i++]).linestyle("-");
-        plt.xlabel("Number of epochs");
-        plt.ylabel("Error between output and prediction");
-        plt.title("Learning rate convergence for different learning rates");
-        plt.legend();
-        plt.show();
-
-        i = 0;
         errors = new ArrayList<>();
         for (Double decay : decays) {
             NeuralNetwork nn = new NeuralNetwork(8, 3, 8);
@@ -158,17 +149,7 @@ public class Main {
 
             errors.add(nn.error_list);
         }
-        plt = Plot.create();
-        for(ArrayList<Double> error: errors)
-            plt.plot().add(error).label(""+decays[i++]).linestyle("-");
-        plt.xlabel("Epochs");
-        plt.ylabel("Error");
-        plt.title("Decay rate convergence for different decay rates");
-        plt.legend();
-        plt.show();
 
-
-        i = 0;
         errors = new ArrayList<>();
         for (int temp = 0; temp < 2; temp++) {
             NeuralNetwork nn = new NeuralNetwork(8, 3, 8);
@@ -180,17 +161,6 @@ public class Main {
 
             errors.add(nn.error_list);
         }
-        plt = Plot.create();
-        int count = 0;
-        for(ArrayList<Double> error: errors) {
-            plt.plot().add(error).label(count==0 ? "unshuffled":"shuffled").linestyle("-");
-            count++;
-        }
-        plt.xlabel("Number of epochs");
-        plt.ylabel("Error between output and prediction");
-        plt.title("Learning rate convergence for different learning rates");
-        plt.legend();
-        plt.show();
 
     }
 }
